@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block h1 %}Home Page of site{% endblock %}
+
+{% block content %}
+    <nav>
+        <ul>
+            <li><a href="{% url 'home:home' %}">Home</a></li>
+            <li><a href="{% url 'accounts:login_request' %}">Login</a></li>
+            <li><a href="{% url 'accounts:user_register' %}">Register</a></li>
+        </ul>
+    </nav>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Welcome, {{ user.phone_number }}!</h2>
+  <p> your name is {{user.name}}</p>
+  <p> your email is {{user.email}}</p>
+  <p> your address is {{user.address}}</p>
+  <p> your national code is {{user.national_code}}</p>
+  
+  <a href="{% url 'accounts:user_profile' %}">Complete your profile</a>
+  
+  <form action="{% url 'accounts:logout' %}" method="post">
+    {% csrf_token %}
+    <button type="submit">Logout</button>
+  </form>
+{% endblock %}
