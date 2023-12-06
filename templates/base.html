@@ -10,6 +10,7 @@
         <h1>{% block h1 %}User Panel{% endblock %}</h1>
     </header>
     <main>
+        <li><a href="{% url 'home:home' %}">Home</a></li>
         {% block content %}{% endblock %}
     </main>
 </body>
