@@ -73,11 +73,9 @@ class UserLoginRequestView(View):
         if form.is_valid():
             phone_number = form.cleaned_data['phone_number']
 
-            # Generate and send OTP code
             random_code = random.randint(1000, 9999)
             send_otp_code(phone_number, random_code, action='login')
 
-            # Save the phone number and code in session for verification in the next view
             request.session['login_phone_number'] = phone_number
             request.session['login_otp_code'] = random_code
 
@@ -99,17 +97,14 @@ class VerifyLoginCodeView(View):
         if form.is_valid():
             entered_code = form.cleaned_data['code']
 
-            # Retrieve phone number and OTP code from session
             phone_number = request.session.get('login_phone_number')
             saved_code = request.session.get('login_otp_code')
 
             if phone_number and saved_code and entered_code == saved_code:
-                # If the entered code is correct, log in the user
                 user, created = User.objects.get_or_create(phone_number=phone_number)
                 login(request, user)
                 messages.success(request, 'You logged in successfully', 'info')
 
-                # Clean up session variables
                 del request.session['login_phone_number']
                 del request.session['login_otp_code']
 
