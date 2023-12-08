@@ -1,8 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views import View
 from .forms import UserRegistrationForm, VerifyCodeForm, UserLoginForm, UserProfileForm, UserChangeForm
-import random
-from utils import send_otp_code
+from utils import OtpGenerator
 from .models import OtpCode, User
 from django.contrib import messages
 from django.contrib.auth import login
@@ -21,9 +20,8 @@ class UserRegisterView(View):
     def post(self, request):
         form = self.form_class(request.POST)
         if form.is_valid():
-            random_code = random.randint(1000, 9999)
-            send_otp_code(form.cleaned_data['phone_number'], random_code, action='register')
-            OtpCode.objects.create(phone_number=form.cleaned_data['phone_number'], code=random_code, action='register')
+            otp_code = OtpGenerator.generate_otp()
+            OtpGenerator.send_otp(form.cleaned_data['phone_number'], otp_code, action='register')
             request.session['user_registration_info'] = {
                 'phone_number': form.cleaned_data['phone_number'],
             }
