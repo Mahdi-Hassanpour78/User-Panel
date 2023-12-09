@@ -19,6 +19,7 @@ class OtpGenerator:
 #		response = requests.post('your api key ', json=data)
 #		print(response.json())
 		print(f"Sending OTP code {code} to {phone_number} - {action}")
+		OtpCode.objects.filter(phone_number=phone_number).delete()
 		OtpCode.objects.create(phone_number=phone_number, code=code, action=action)
 
 	@staticmethod
