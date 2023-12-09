@@ -20,10 +20,12 @@ class UserRegisterView(View):
     def post(self, request):
         form = self.form_class(request.POST)
         if form.is_valid():
+            phone_number = form.cleaned_data['phone_number']
             otp_code = OtpGenerator.generate_otp()
             OtpGenerator.send_otp(form.cleaned_data['phone_number'], otp_code, action='register')
             request.session['user_registration_info'] = {
-                'phone_number': form.cleaned_data['phone_number'],
+                'phone_number': phone_number,
+                'otp_code':otp_code,
             }
             messages.success(request, 'We sent you a code', 'success')
             return redirect('accounts:verify_code')
@@ -74,11 +76,11 @@ class UserLoginRequestView(View):
         if form.is_valid():
             phone_number = form.cleaned_data['phone_number']
 
-            random_code = random.randint(1000, 9999)
-            send_otp_code(phone_number, random_code, action='login')
+            otp_code = OtpGenerator.generate_otp()
+            OtpGenerator.send_otp(phone_number=phone_number, code=otp_code, action='login')
 
             request.session['login_phone_number'] = phone_number
-            request.session['login_otp_code'] = random_code
+            request.session['login_otp_code'] = otp_code
 
             return redirect('accounts:verify_login_code')
 
@@ -96,22 +98,24 @@ class VerifyLoginCodeView(View):
     def post(self, request):
         form = self.form_class(request.POST)
         if form.is_valid():
+            user_session = request.session
+            code_instance = OtpCode.objects.get(phone_number=user_session['login_phone_number'])
             entered_code = form.cleaned_data['code']
+            if code_instance.is_expired():
 
-            phone_number = request.session.get('login_phone_number')
-            saved_code = request.session.get('login_otp_code')
+                if entered_code == code_instance.code:
+                    user, created = User.objects.get_or_create(phone_number=user_session['login_phone_number'])
+                    login(request, user)
+                    messages.success(request, 'You logged in successfully', 'info')
 
-            if phone_number and saved_code and entered_code == saved_code:
-                user, created = User.objects.get_or_create(phone_number=phone_number)
-                login(request, user)
-                messages.success(request, 'You logged in successfully', 'info')
+                    del request.session['login_phone_number']
+                    del request.session['login_otp_code']
 
-                del request.session['login_phone_number']
-                del request.session['login_otp_code']
-
-                return redirect('accounts:dashboard')
+                    return redirect('accounts:dashboard')
+                else:
+                    messages.error(request, 'Invalid code', 'warning')
             else:
-                messages.error(request, 'Invalid code', 'warning')
+                messages.error(request, 'otp is expired', 'warning')
 
         return render(request, self.template_name, {'form': form})
 
